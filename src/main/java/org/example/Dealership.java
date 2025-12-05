@@ -14,69 +14,50 @@ public class Dealership {
         this.name = name;
         this.address = address;
         this.phone = phone;
-        this.inventory = new ArrayList<>();  //instantiate
+        this.inventory = new ArrayList<>();
     }
 
+    //================= SEARCH METHODS =================//
 
     public List<Vehicle> getVehiclesByPrice(double min, double max) {
         List<Vehicle> results = new ArrayList<>();
-        for (Vehicle v : inventory) {
-            if (v.getPrice() >= min && v.getPrice() <= max){
-                results.add(v);
-            }
-        }
+        for (Vehicle v : inventory)
+            if (v.getPrice() >= min && v.getPrice() <= max) results.add(v);
         return results;
     }
-
 
     public List<Vehicle> getVehiclesByMakeModel(String make, String model) {
         List<Vehicle> results = new ArrayList<>();
-        for (Vehicle v : inventory) {
-            if (v.getMake().equalsIgnoreCase(make) && v.getModel().equalsIgnoreCase(model)){
-                results.add(v);
-            }
-        }
+        for (Vehicle v : inventory)
+            if (v.getMake().equalsIgnoreCase(make) && v.getModel().equalsIgnoreCase(model)) results.add(v);
         return results;
     }
 
-
     public List<Vehicle> getVehiclesByYear(int min, int max){
         List<Vehicle> results = new ArrayList<>();
-        for (Vehicle v : inventory) {
-            if (v.getYear() >= min && v.getYear() <= max){
-                results.add(v);
-            }
-        }
+        for (Vehicle v : inventory)
+            if (v.getYear() >= min && v.getYear() <= max) results.add(v);
         return results;
     }
 
     public List<Vehicle> getVehiclesByColor(String color){
         List<Vehicle> results = new ArrayList<>();
-        for (Vehicle v : inventory) {
-            if (v.getColor().equalsIgnoreCase(color)){
-                results.add(v);
-            }
-        }
+        for (Vehicle v : inventory)
+            if (v.getColor().equalsIgnoreCase(color)) results.add(v);
         return results;
     }
 
     public List<Vehicle> getVehiclesByMileage(int min, int max){
         List<Vehicle> results = new ArrayList<>();
-        for (Vehicle v : inventory) {
-            if (v.getOdometer() >= min && v.getOdometer() <= max){
-                results.add(v);
-            }
-        }
+        for (Vehicle v : inventory)
+            if (v.getOdometer() >= min && v.getOdometer() <= max) results.add(v);
         return results;
     }
 
-    public List<Vehicle> getVehiclesByType(String vehicleType){
+    public List<Vehicle> getVehiclesByType(String type){
         List<Vehicle> results = new ArrayList<>();
-        for (Vehicle v : inventory) {
-            if (v.getVehicleType().equalsIgnoreCase(vehicleType)){
-                results.add(v);
-            }
-        }
+        for (Vehicle v : inventory)
+            if (v.getVehicleType().equalsIgnoreCase(type)) results.add(v);
         return results;
     }
 
@@ -84,40 +65,29 @@ public class Dealership {
         return new ArrayList<>(inventory);
     }
 
-    public void addVehicle(Vehicle vehicle){
-        inventory.add(vehicle);
+    public void addVehicle(Vehicle v){ inventory.add(v); }
+
+    //================= FIXED VIN and made it a String instead of int =================//
+
+    public Vehicle getVehicleByVin(String vin) {
+        for (Vehicle v : inventory)
+            if (v.getVin().equals(vin)) return v;
+        return null;
     }
 
-    public boolean removeVehicle(int vin){
-        for (Vehicle v : inventory){
-            if (v.getVin() == vin){
+    public boolean removeVehicle(String vin) {
+        for (Vehicle v : inventory)
+            if (v.getVin().equals(vin)) {
                 inventory.remove(v);
                 return true;
             }
-        }
         return false;
     }
 
-    public Vehicle getVehicleByVin(int vin) {
-        for(Vehicle v: inventory) { //loop through all vehicles
-            if (v.getVin() == vin) {
-            return v;
-            }
-        }
-        return null; //If not found, return null
-    }
+    //=============== GETTERS ===============//
 
-
-    //Getters
-    public String getName() {
-        return name;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public String getPhone() {
-        return phone;
-    }
+    public String getName() { return name; }
+    public String getAddress() { return address; }
+    public String getPhone() { return phone; }
 }
+

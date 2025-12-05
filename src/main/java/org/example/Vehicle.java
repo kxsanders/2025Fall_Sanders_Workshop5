@@ -3,7 +3,7 @@ package org.example;
 public class Vehicle {
 
     //Will hold information about a specific vehicle
-    private int vin;
+    private String vin;
     private int year;
     private String make;
     private String model;
@@ -12,7 +12,7 @@ public class Vehicle {
     private int odometer;
     private double price;
 
-    public Vehicle(int vin, int year, String make, String model, String vehicleType, String color, int odometer, double price) {
+    public Vehicle(String vin, int year, String make, String model, String vehicleType, String color, int odometer, double price) {
         this.vin = vin;
         this.year = year;
         this.make = make;
@@ -23,7 +23,7 @@ public class Vehicle {
         this.price = price;
     }
 
-    public int getVin() {
+    public String getVin() {
         return vin;
     }
 

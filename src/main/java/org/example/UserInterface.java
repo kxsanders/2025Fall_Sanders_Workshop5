@@ -1,36 +1,30 @@
 package org.example;
 
-import java.time.format.DateTimeFormatter;
+
+import org.example.DAO.VehicleDAO;
+import org.example.DAO.SalesContractDAO;
+import org.example.DAO.LeaseContractDAO;
 import java.util.List;
 import java.util.Scanner;
 
 public class UserInterface {
 
-    private Dealership dealership; //holds dealership data
-    private Scanner scanner = new Scanner(System.in); //reads user input
+    private final VehicleDAO vehicleDAO;
+    private final SalesContractDAO salesDAO;
+    private final LeaseContractDAO leaseDAO;
+    private final Scanner scanner = new Scanner(System.in);
 
-    //Load dealership from file
-    private void init() {
-
-        //load dealership data directly here
-        DealershipFileManager fileManager = new DealershipFileManager();
-        dealership = fileManager.getDealership();
-
-        if(dealership == null){
-            System.out.println("Could not load. Please try again.");
-        }
-        else{
-            System.out.println("Dealership loaded successfully.");
-        }
+    // Constructor
+    public UserInterface(String url, String user, String pass) {
+        this.vehicleDAO = new VehicleDAO(url, user, pass);
+        this.salesDAO = new SalesContractDAO(url, user, pass);
+        this.leaseDAO = new LeaseContractDAO(url, user, pass);
     }
 
     //Run menu
     public void display() {
 
-        boolean isRunning = true;
-        init();
-
-        while (isRunning) {
+        while (true) {
             System.out.println("---MAIN MENU---");
             System.out.println("1) Find vehicles within a price range");
             System.out.println("2) Find vehicles by make/model");
@@ -45,247 +39,104 @@ public class UserInterface {
             System.out.println("-----------------");
             System.out.println("99) QUIT");
 
-            String choice = scanner.nextLine();
 
-            switch (choice) {
-                case "1": processGetByPriceRequest(); break;
-                case "2": processGetByMakeModelRequest(); break;
-                case "3": processGetByYearRequest(); break;
-                case "4": processGetByColorRequest(); break;
-                case "5": processGetByMileageRequest(); break;
-                case "6": processGetByVehicleTypeRequest(); break;
-                case "7": processGetAllVehiclesRequest(); break;
-                case "8": processAddVehiclesRequest(); break;
-                case "9": processRemoveVehiclesRequest(); break;
-                case "10": processSellLeaseVehicleRequest(); break;
-                case "99":
-                    System.out.println("Goodbye!");
-                    isRunning = false;
-                    break;
-                default:
-                    System.out.println("Invalid. Please try again.");
+            switch (scanner.nextLine()) {
+                case "1" -> searchPrice();
+                case "2" -> searchMakeModel();
+                case "3" -> searchYear();
+                case "4" -> searchColor();
+                case "5" -> searchMileage();
+                case "6" -> searchType();
+                case "7" -> displayVehicles(vehicleDAO.getAllVehicles());
+                case "8" -> addVehicle();
+                case "9" -> removeVehicle();
+                case "10" -> processContract();
+                case "99" -> {System.out.println("Goodbye!"); return;}
+                default -> System.out.println("Invalid choice.");
             }
         }
     }
 
     //Process Methods for each menu option
-    private void processGetByPriceRequest(){
-        double min = getDoubleInput("Enter minimum price: ");
-        double max = getDoubleInput("Enter maximum price: ");
-
-        List<Vehicle> vehicles = dealership.getVehiclesByPrice(min, max);
-        displayVehicles(vehicles);
+    private void searchPrice() {
+        displayVehicles(vehicleDAO.getByPrice(
+                getDouble("Min price: "), getDouble("Max price: ")));
     }
 
-    private void processGetByMakeModelRequest(){
-            String make = getStringInput("Enter make: ");
-            String model = getStringInput("Enter model: ");
-
-            List<Vehicle> vehicles = dealership.getVehiclesByMakeModel(make, model);
-            displayVehicles(vehicles);
+    private void searchMakeModel(){
+        displayVehicles(vehicleDAO.getByMakeModel(
+                get("Make: "), get("Model: ")
+        ));
     }
 
-    private void processGetByYearRequest(){
-        int min = getIntInput("Enter minimum year: ");
-        int max = getIntInput("Enter maximum year: ");
-
-        List<Vehicle> vehicles = dealership.getVehiclesByYear(min, max);
-        displayVehicles(vehicles);
+    private void searchYear(){
+        displayVehicles(vehicleDAO.getByYear(
+                getInt("Min year:"), getInt("Max year:")
+        ));
     }
 
-    private void processGetByColorRequest(){
-        String color = getStringInput("Enter color: ");
+    private void searchColor(){ displayVehicles(vehicleDAO.getByColor(get("Color: "))); }
 
-        List<Vehicle> vehicles = dealership.getVehiclesByColor(color);
-        displayVehicles(vehicles);
+    private void searchMileage(){
+        displayVehicles(vehicleDAO.getByMileage(
+                getInt("Min miles:"), getInt("Max miles:")
+        ));
     }
 
-    private void processGetByMileageRequest(){
-        int min = getIntInput("Enter minimum mileage: ");
-        int max = getIntInput("Enter maximum number: ");
+    private void searchType(){ displayVehicles(vehicleDAO.getByType(get("Type: "))); }
 
-        List<Vehicle> vehicles = dealership.getVehiclesByMileage(min, max);
-        displayVehicles(vehicles);
+    private void addVehicle(){
+        Vehicle v = new Vehicle(
+                get("VIN:"), getInt("Year:"), get("Make:"), get("Model:"),
+                get("Type:"), get("Color:"), getInt("Mileage:"), getDouble("Price:")
+        );
+        vehicleDAO.insertVehicle(v);
     }
 
-    private void processGetByVehicleTypeRequest(){
-        String type = getStringInput("Enter vehicle type (car, truck, SUV, van): ");
+    private void removeVehicle(){ vehicleDAO.deleteVehicle(get("VIN to remove: ")); }
 
-        List<Vehicle> vehicles = dealership.getVehiclesByType(type);
-        displayVehicles(vehicles);
-    }
+    private void processContract(){
+        String vin = get("VIN:");
+        Vehicle v = vehicleDAO.getByVin(vin);
+        if(v == null){ System.out.println("Vehicle not found."); return;}
 
-    private void processGetAllVehiclesRequest(){
-        List<Vehicle> allVehicles = dealership.getAllVehicles();
-        displayVehicles(allVehicles);
-    }
+        String name = get("Customer name:");
+        String email = get("Email:");
+        String date = get("Date YYYYMMDD:");
 
-    private void processAddVehiclesRequest(){
-        int vin = getIntInput("Enter VIN: ");
-        int year = getIntInput("Enter year: ");
-        String make = getStringInput("Enter make: ");
-        String model = getStringInput("Enter model: ");
-        String type = getStringInput("Enter type (car, truck, SUV, van): ");
-        String color = getStringInput("Enter color: ");
-        int odometer = getIntInput("Enter odometer reading: ");
-        double price = getDoubleInput("Enter price: ");
-
-        Vehicle newVehicle = new Vehicle(vin, year, make, model, type, color, odometer, price);
-        dealership.addVehicle((newVehicle));
-
-        //save updated info to CSV
-        DealershipFileManager fileManager = new DealershipFileManager();
-        fileManager.saveDealership(dealership);
-
-        System.out.println("Vehicle successfully added!");
-    }
-
-    private void processRemoveVehiclesRequest(){
-        int vin = getIntInput("Enter VIN of vehicle to remove: ");
-        boolean removed = dealership.removeVehicle(vin);
-
-        if (removed) {
-            System.out.println("Vehicle successfully removed!");
-            DealershipFileManager fileManager = new DealershipFileManager();
-            fileManager.saveDealership(dealership);
+        if(get("SALE or LEASE?").equalsIgnoreCase("SALE")){
+            salesDAO.insertSale(new SalesContract(date,name,email,v,false));
+        }else{
+            leaseDAO.insertLease(new LeaseContract(date,name,email,v,v.getPrice()*0.5,v.getPrice()*0.07));
         }
-        else {
-            System.out.println("Vehicle not found.");
-        }
+        vehicleDAO.deleteVehicle(vin);
+        System.out.println("Contract saved – vehicle removed.");
     }
 
-    private void processSellLeaseVehicleRequest(){
-        try {
-            //Get VIN of the vehicle to sell/lease
-            int vin = getIntInput("Enter VIN of the vehicle:");
-            Vehicle vehicle = dealership.getVehicleByVin(vin);
+    //================ HELPER INPUT ================
+    private int getInt(String msg){ System.out.print(msg); return Integer.parseInt(scanner.nextLine()); }
+    private double getDouble(String msg){ System.out.print(msg); return Double.parseDouble(scanner.nextLine()); }
+    private String get(String msg){ System.out.print(msg); return scanner.nextLine().trim(); }
 
-            if (vehicle == null) {
-                System.out.println("Vehicle not found.");
-                return;
-            }
+    //Did a grid style table
+    private void displayVehicles(List<Vehicle> list) {
 
-            //Get customer info
-            String customerName = getStringInput("Enter customer name: ");
-            String customerEmail = getStringInput("Enter customer email: ");
-            String date = getStringInput("Enter date: (YYYYMMDD");
+        System.out.println("+----------------+------+------------+------------+----------+------------+------------+--------------+");
+        System.out.println("| VIN            | Year | Make       | Model      | Type     | Color      | Mileage    | Price        |");
+        System.out.println("+----------------+------+------------+------------+----------+------------+------------+--------------+");
 
-            //Temp contracts to show pricing
-            SalesContract tempSale = new SalesContract(date, customerName, customerEmail, vehicle, false);
-            LeaseContract tempLease = new LeaseContract(date, customerName, customerEmail, vehicle, vehicle.getPrice() * 0.5, vehicle.getPrice() * 0.07);
-
-            System.out.printf("SALE: Total Price = $%.2f, Monthly Payment = $%.2f%n", tempSale.getTotalPrice(), tempSale.getMonthlyPayment());
-            System.out.printf("LEASE: Total Price = $%.2f, Monthly Payment = $%.2f%n", tempLease.getTotalPrice(), tempSale.getMonthlyPayment());
-
-            //Ask SALE or LEASE
-            String option;
-            while(true) {
-                option = getStringInput("Is this a SALE or a LEASE?").toUpperCase();
-                if (option.equals("SALE") || option.equals("LEASE")) {
-                    //Check lease eligibility (vehicle is <= 3 years old)
-                    if (option.equals("LEASE")) {
-                        int currentYear = java.time.Year.now().getValue();
-                        if (currentYear - vehicle.getYear() > 3) {
-                            System.out.println("Vehicle too old to lease. Switching to SALE.");
-                            option = "SALE";
-                        }
-                    }
-                    break;
-                }
-                else {
-                    System.out.println("Please enter SALE or LEASE.");
-                }
-            }
-
-                //Create correct contract type
-                Contract contract;
-                if (option.equals("SALE")) {
-                    boolean financeOption = getStringInput("Would you like to finance? Type YES or NO: ").equalsIgnoreCase("yes");
-                    contract = new SalesContract(date, customerName, customerEmail, vehicle, financeOption);
-                }
-                else {
-                    double expectedEndingValue = vehicle.getPrice() * 0.5; //50% of price
-                    double leaseFee = vehicle.getPrice() * 0.07; //7% lease fee
-                    contract = new LeaseContract(date, customerName, customerEmail, vehicle, expectedEndingValue, leaseFee);
-                }
-
-                // save contract to file
-                ContractFileManager contractFileManager = new ContractFileManager();
-                contractFileManager.addContract(contract);
-                System.out.println("Error processing sale/lease.");
-
-                //remove the sold/leased vehicle from inventory
-                dealership.removeVehicle(vin);
-                DealershipFileManager fileManager = new DealershipFileManager();
-                fileManager.saveDealership(dealership);
-
-                System.out.println("Contract created. Vehicle removed from inventory.");
-                System.out.println("Contract details saved to contracts.csv");
-
-        } catch (Exception exception) {
-            System.out.println("Error processing sale/lease: ");
-        }
-    }
-
-    private void displayVehicles(List<Vehicle> vehicles) {
-        if(vehicles.isEmpty()) {
-            System.out.println("No vehicles found.");
-        } else {
-            //format assistance from research
-            // %-8s String, left aligned, 8 characters wide (VIN)
-            // %-6s String, left aligned, 6 characters wide (year)
-            //etc...
-            System.out.printf("%-8s %-6s %-10s %-10s %-8s %-10s %-12s %-10s%n", "VIN", "Year", "Make", "Model", "Type", "Color", "Odometer", "Price");
-            System.out.println("-----------------------------------------------------------------------------------------------");
-            for (Vehicle v : vehicles) {
-                System.out.printf("%-8d %-6d %-10s %-10s %-8s %-10s %-12d $%-10.2f%n", v.getVin(),
-                        v.getYear(),
-                        v.getMake(),
-                        v.getModel(),
-                        v.getVehicleType(),
-                        v.getColor(),
-                        v.getOdometer(),
-                        v.getPrice());
-            }
+        for (Vehicle v : list) {
+            System.out.printf("| %-14s | %-4d | %-10s | %-10s | %-8s | %-10s | %-10d | $%-10.2f |\n",
+                    v.getVin(), v.getYear(), v.getMake(), v.getModel(),
+                    v.getVehicleType(), v.getColor(), v.getOdometer(), v.getPrice());
         }
 
-        //Pause for smoother experience
-        System.out.println("\nPress enter to return to the main menu");
-        scanner.nextLine();
+        System.out.println("+----------------+------+------------+------------+----------+------------+------------+--------------+");
     }
+}
 
 
-    //.........................HELPER METHODS...........................
-    //Rewrote my Process methods to go with Helper methods.
-    //Need to have a safety net for each input so the program doesn't crash with a wrong input
-    //Going with this approach because:
-    //it would be a lot of repeating try catch blocks with a lot more room for error if I attempted to input it in each individual method.
-
-    private int getIntInput(String prompt) {
-        while(true){
-            try {
-                System.out.println(prompt);
-                return Integer.parseInt(scanner.nextLine());
-            }
-            catch (NumberFormatException exception){
-                System.out.println("Invalid input. Please enter a valid number.");
-            }
-        }
-    }
-
-    private double getDoubleInput(String prompt) {
-        while(true){
-            try {
-                System.out.println(prompt);
-                return Double.parseDouble(scanner.nextLine());
-            }
-            catch(NumberFormatException exception) {
-                System.out.println("Invalid input. Please enter a valid number.");
-            }
-        }
-    }
-
-    private String getStringInput(String prompt) {
+   /* private String getStringInput(String prompt) {
         while(true){
             System.out.println(prompt);
             String input = scanner.nextLine().trim();
@@ -304,7 +155,7 @@ public class UserInterface {
             // + one or more of the allowed characters
 
             //If the prompt mentions "email", allow @ and .
-            if (prompt.toLowerCase().contains("email")) {
+             if (prompt.toLowerCase().contains("email")) {
                 //email validation that I looked up
                 if (!input.matches("^[\\w._%+-]+@[\\w.-]+\\.[a-zA-Z]{2,}$")) {
                     System.out.println("Invalid email format. Please enter a valid email address.");
@@ -327,6 +178,6 @@ public class UserInterface {
                 continue;
             }
             return input;
-        }
-    }
-}
+        } */
+
+

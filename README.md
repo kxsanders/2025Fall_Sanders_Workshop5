@@ -1,136 +1,137 @@
-# 🚗 Vehicle Dealership Management System
+# 🚗 Car Dealership Management System  
+Database-Driven Java CLI Application  
 
-Welcome to the **Vehicle Dealership Management System**!  
-This Java application allows a dealership to manage inventory, process sales and leases, and track contracts. Perfect for learning **OOP concepts**, **file handling**, and **user interfaces** in Java.
-
----
-
-## 📝 Features
-
-- **Inventory Management**
-  - Add new vehicles to the dealership
-  - Remove vehicles from inventory
-  - Search vehicles by:
-    - Price range 💰
-    - Make/Model 🔧
-    - Year range 📅
-    - Color 🎨
-    - Mileage 🛣️
-    - Vehicle type (Car, Truck, SUV, Van) 🚙
-
-- **Sales & Lease Processing**
-  - Sell a vehicle
-  - Lease a vehicle (if eligible) 📝
-  - Generate and save contracts to `contracts.csv`  
-
-- **File Management**
-  - Load and save dealership inventory (`inventory.csv`)
-  - Append and save contracts (`contracts.csv`)
-  - Supports headers and CSV parsing
-
-- **User-Friendly Interface**
-  - Menu-driven system
-  - Input validation for numbers, text, and emails ✉️
-  - Displays vehicle inventory in a readable table format
+A full dealership inventory system rebuilt from CSV-files into a persistent MySQL-backed application using JDBC and DAO architecture.  
+Users may search, add, remove, sell, or lease vehicles. All data now lives in SQL tables instead of text files.
 
 ---
 
-## 💻 How It Works
+## 📌 Features
 
-1. **Load Dealership**
-   - Reads `inventory.csv` to populate the dealership inventory
-2. **Display Menu**
-   - Options 1–10 to search, add, remove, or sell/lease vehicles
-3. **Process Sale or Lease**
-   - Sale:
-     - Optional financing
-     - Calculates total price and monthly payments
-   - Lease:
-     - Vehicle must be ≤ 3 years old
-     - Calculates lease fee, expected ending value, and monthly payments
-4. **Save Contracts**
-   - Each contract is appended to `contracts.csv`  
-   - Removes vehicle from inventory after sale/lease
-5. **Exit Program**
-   - Updates all files and exits gracefully
+| Functionality | Status | Storage |
+|---|---|---|
+| View vehicles (all or filtered) | ✔ | MySQL `vehicles` table |
+| Add a vehicle to inventory | ✔ | DAO → INSERT |
+| Remove vehicle by VIN | ✔ | DAO → DELETE |
+| Sell vehicle | ✔ | Saves to `sales_contracts` |
+| Lease vehicle | ✔ | Saves to `lease_contracts` |
+| VIN now stored as `VARCHAR(20)` not int | ✔ | + fixed all DAO mappings |
+| Fully formatted table UI | ✔ | Clean CLI output |
 
 ---
 
-## 🛠️ Classes & Structure
+## 🏗 Tech Stack
 
-- **Dealership**
-  - Stores dealership info and inventory
-  - Provides methods to search, add, remove, and get vehicles by VIN
-
-- **Vehicle**
-  - Holds vehicle data (VIN, year, make, model, type, color, odometer, price)
-
-- **Contract (Abstract)**
-  - Base class for `SalesContract` and `LeaseContract`
-  - Abstract methods:
-    - `getTotalPrice()`
-    - `getMonthlyPayment()`
-    - `getType()`
-
-- **SalesContract**
-  - Extends `Contract`
-  - Calculates total price and monthly payment (optional finance)
-
-- **LeaseContract**
-  - Extends `Contract`
-  - Calculates lease fee, expected ending value, and monthly payment
-
-- **File Managers**
-  - `DealershipFileManager` → Handles inventory CSV
-  - `ContractFileManager` → Handles contracts CSV (append & load)
-
-- **UserInterface**
-  - Menu-driven interface
-  - Input validation and display formatting
-  - Handles user interactions for all menu options
+| Component | Technology |
+|---|---|
+| Language | Java 17 |
+| DB | MySQL 8+ |
+| Build System | Maven |
+| DB Access | JDBC + DAO pattern |
+| UI | Text-Based Console Application |
 
 ---
 
-## ⚡ Input Guidelines
+## 📂 Project Structure
 
-- **Numbers**: Only integers or doubles for VIN, year, price, mileage
-- **Text**: Letters, spaces, hyphens allowed for names and vehicle make/model
-- **Emails**: Standard format (`example@domain.com`)
-- **Date**: YYYYMMDD (converted internally to `YYYY/MM/DD`)
+src/main/java/org/example
+│ Program.java → Runs UI with DB credentials
+│ UserInterface.java → Calls DAO instead of CSV
+│
+├── DAO/
+│ VehicleDAO.java
+│ SalesContractDAO.java
+│ LeaseContractDAO.java
+│
+├── Vehicle.java
+├── SalesContract.java
+├── LeaseContract.java
+└── Contract.java (parent)
 
----
-
-## 📂 CSV File Format
-
-### Inventory (`inventory.csv`)
-VIN|Year|Make|Model|Type|Color|Odometer|Price
-12345|2022|Toyota|Camry|Car|Blue|15000|25000
-...
-
-### Contracts (`contracts.csv`)
-CONTRACT_TYPE|DATE|CUSTOMER_NAME|CUSTOMER_EMAIL|VIN|YEAR|MAKE|MODEL|VEHICLE_TYPE|COLOR|ODOMETER|VEHICLE_PRICE|CONTRACT_FIELDS|TOTAL_PRICE|MONTHLY_PAYMENT
-
-SALE|2025/11/02|John Doe|john@example.com|12345|2022|Toyota|Camry|Car|Blue|15000|25000|FINANCE:YES|25500|425.00
-LEASE|2025/11/02|Jane Smith|jane@example.com|54321|2023|Honda|Civic|Car|Red|5000|22000|LEASE_FEE:1540|13500|410.00
+pgsql
+Copy code
 
 ---
 
-## 🚀 How to Run
+## 🔌 Required Database Setup
 
-1. Clone or download the repository  
-2. Ensure you have Java 8 or higher installed  
-3. Open the project in your IDE (IntelliJ, VS Code, etc.)  
-4. Run `UserInterface` class  
-5. Follow menu prompts to interact with the dealership
+```sql
+CREATE DATABASE car_dealership;
+USE car_dealership;
 
----
+CREATE TABLE vehicles (
+    VIN VARCHAR(20) PRIMARY KEY,
+    Make VARCHAR(30),
+    Model VARCHAR(30),
+    Year INT,
+    Color VARCHAR(20),
+    Type VARCHAR(20),
+    Price DECIMAL(10,2),
+    Mileage INT,
+    SOLD TINYINT(1)
+);
 
-## 🎯 Notes
+CREATE TABLE sales_contracts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    VIN VARCHAR(20),
+    Buyer_Name VARCHAR(50),
+    Sale_Price DECIMAL(10,2),
+    Sale_Date VARCHAR(10),
+    Dealer_id INT
+);
 
-- Lease eligibility: Only vehicles ≤ 3 years old  
-- Contracts are **appended** to `contracts.csv` to avoid overwriting  
-- Input validation ensures smooth user experience  
-- Displays all vehicles in a formatted table  
+CREATE TABLE lease_contracts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    VIN VARCHAR(20),
+    Leasee_Name VARCHAR(50),
+    Monthly_Payment DECIMAL(10,2),
+    Months INT,
+    Start_Date VARCHAR(10),
+    Dealer_id INT
+);
+▶ Run Instructions
+Start MySQL server
+
+Make sure DB exists → car_dealership
+
+Run via IntelliJ command-line args:
+
+bash
+Copy code
+Program jdbc:mysql://localhost:3306/car_dealership root <yourpassword>
+Menu opens:
+
+pgsql
+Copy code
+--- MAIN MENU ---
+1) Search by price range
+2) Filter by make/model
+3) Filter by year
+4) Filter by color
+5) Filter by mileage
+6) Filter by type
+7) List ALL vehicles
+8) Add vehicle
+9) Remove vehicle
+10) Sell/Lease vehicle
+99) Quit
+📊 Example Console Output
+markdown
+Copy code
++----------------- VEHICLE INVENTORY -----------------+
+ VIN         YEAR    MAKE       MODEL      COLOR     PRICE
+-----------------------------------------------------------
+ 1HGBH41     2019    Honda      Civic      Blue      $17,995
+ 3ABC92X     2021    Toyota     Camry      Silver    $22,400
+ JDM4467     2016    Jeep       Wrangler   Red       $29,150
+-----------------------------------------------------------
+Total Vehicles: 3
+🔥 What I Learned
+✔ Switching from CSV → SQL persistence
+✔ JDBC connection handling
+✔ Using DAO classes for CRUD separation
+✔ Data validation, VIN handling, SQL schema design
+✔ Full app migration without losing functionality
 
 👤 Author
 Kayla Sanders

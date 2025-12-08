@@ -121,6 +121,7 @@ Copy code
  JDM4467     2016    Jeep       Wrangler   Red       $29,150
 -----------------------------------------------------------
 Total Vehicles: 3
+
 🔥 What I Learned
 ✔ Switching from CSV → SQL persistence
 ✔ JDBC connection handling

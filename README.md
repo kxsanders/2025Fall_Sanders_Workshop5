@@ -48,9 +48,6 @@ src/main/java/org/example
 ├── LeaseContract.java
 └── Contract.java (parent)
 
-pgsql
-Copy code
-
 ---
 
 ## 🔌 Required Database Setup
@@ -96,9 +93,6 @@ Make sure DB exists → car_dealership
 
 Run via IntelliJ command-line args:
 
-bash
-Copy code
-Program jdbc:mysql://localhost:3306/car_dealership root <yourpassword>
 Menu opens:
 
 pgsql

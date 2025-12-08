@@ -109,9 +109,10 @@ Copy code
 9) Remove vehicle
 10) Sell/Lease vehicle
 99) Quit
+
+
 📊 Example Console Output
-markdown
-Copy code
+
 +----------------- VEHICLE INVENTORY -----------------+
  VIN         YEAR    MAKE       MODEL      COLOR     PRICE
 -----------------------------------------------------------
